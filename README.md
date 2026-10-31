@@ -1,6 +1,6 @@
 # Spice Plot
 Simple one page web app for displaying LT Spice data
-- Drag your frequency or time domain LT Spice data exports onto the page to view it
+- Drag your frequency or time domain LT Spice data exports onto the page to add it to the chart
 - Multiple files can be viewed at once
 - Chart can be toggled between freq or time domain
 - Stepped data is separated into unique series
