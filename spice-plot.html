@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spice Plot</title>
+<style>
+  :root{
+    --bg:#0b0e14;
+    --panel:#12161f;
+    --panel-2:#161b26;
+    --panel-3:#1a202c;
+    --border:#232a38;
+    --border-2:#2a3446;
+    --text:#e6eaf2;
+    --muted:#8b93a7;
+    --muted-2:#5b647a;
+    --accent:#4ea1ff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    overscroll-behavior:none;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- header ---------- */
+  header{
+    height:56px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 16px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#11151e,#0d111a);
+  }
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .logo{width:26px;height:26px;color:var(--accent);flex:0 0 auto}
+  .brand-txt{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+  h1{margin:0;font-size:14px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+  .sub{font-size:10.5px;color:var(--muted);letter-spacing:.3px;white-space:nowrap}
+  .spacer{flex:1}
+  .btn{
+    font-family:inherit;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+    padding:7px 13px;
+    border-radius:8px;
+    font-size:12.5px;
+    font-weight:500;
+    cursor:pointer;
+    transition:background .15s,border-color .15s,transform .06s,color .15s;
+    white-space:nowrap;
+  }
+  .btn:hover{background:#1e2431;border-color:#2e3749}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#04101f;font-weight:650}
+  .btn.primary:hover{background:#6fb2ff;border-color:#6fb2ff}
+  .btn.ghost{background:transparent;color:var(--muted)}
+  .btn.ghost:hover{background:#1a202c;color:var(--text)}
+  .btn.small{padding:5px 11px;font-size:11.5px;border-radius:7px}
+  /* ---------- layout ---------- */
+  main{flex:1 1 auto;display:flex;min-height:0}
+  /* ---------- sidebar ---------- */
+  #sidebar{
+    width:302px;
+    flex:0 0 302px;
+    border-right:1px solid var(--border);
+    background:var(--panel);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .side-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px;
+    font-size:10.5px;text-transform:uppercase;letter-spacing:1px;
+    color:var(--muted);font-weight:700;
+    border-bottom:1px solid var(--border);
+    flex:0 0 auto;
+  }
+  .badge{
+    background:#1c2331;border-radius:999px;padding:2px 9px;
+    font-size:10.5px;color:var(--text);letter-spacing:0;font-weight:600;
+  }
+  #fileList{flex:1 1 auto;overflow-y:auto;padding:9px;min-height:0}
+  #fileList::-webkit-scrollbar{width:9px}
+  #fileList::-webkit-scrollbar-thumb{background:#232a38;border-radius:5px;border:2px solid var(--panel)}
+  #fileList::-webkit-scrollbar-thumb:hover{background:#2e3749}
+  .side-empty{
+    color:var(--muted-2);font-size:12px;text-align:center;
+    padding:36px 14px;line-height:1.7;
+  }
+  .file-group{
+    margin-bottom:9px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--panel-2);
+  }
+  .file-head{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 9px 8px 7px;
+    background:#151a25;
+  }
+  .file-name{
+    flex:1;min-width:0;font-size:12.5px;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    cursor:text;border-radius:5px;padding:2px 4px;margin:-2px -4px;
+    transition:background .12s;
+  }
+  .file-name:hover{background:#1e2534}
+  .file-name-input{
+    flex:1;min-width:0;
+    background:#0e1219;
+    border:1px solid var(--accent);
+    border-radius:6px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:12.5px;
+    font-weight:600;
+    padding:2px 6px;
+    outline:none;
+    box-shadow:0 0 0 3px rgba(78,161,255,.15);
+  }
+  .file-name-input::placeholder{color:var(--muted-2);font-weight:400}
+  .trace{
+    display:flex;align-items:center;gap:7px;
+    padding:6px 9px 6px 12px;
+    cursor:pointer;
+    border-top:1px solid #1b2130;
+    transition:background .12s;
+  }
+  .trace:hover{background:var(--panel-3)}
+  .trace.off{opacity:.38}
+  .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+  .trace-name{
+    flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-variant-numeric:tabular-nums;
+  }
+  .trace-tag{
+    font-size:9px;font-weight:700;letter-spacing:.4px;
+    color:var(--muted-2);background:#1b2130;border-radius:4px;
+    padding:1px 5px;flex:0 0 auto;
+  }
+  .pts{font-size:10px;color:var(--muted-2);font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .icon-btn{
+    background:none;border:none;color:var(--muted-2);
+    cursor:pointer;padding:3px;border-radius:5px;
+    display:grid;place-items:center;flex:0 0 auto;
+    transition:color .12s,background .12s;
+  }
+  .icon-btn:hover{color:var(--text);background:#242c3b}
+  .icon-btn svg{display:block}
+  /* ---------- chart ---------- */
+  #chartWrap{position:relative;flex:1 1 auto;min-width:0;overflow:hidden}
+  canvas{position:absolute;inset:0;display:block;cursor:crosshair;touch-action:none}
+  .chart-toolbar{
+    position:absolute;top:12px;right:14px;
+    display:flex;gap:8px;align-items:center;z-index:3;
+  }
+  .segmented{
+    display:flex;gap:2px;
+    background:rgba(14,18,25,.92);
+    border:1px solid var(--border);
+    border-radius:8px;padding:2px;
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .segmented.dimmed{opacity:.45}
+  .segmented button{
+    border:none;background:transparent;color:var(--muted);
+    font-family:inherit;font-size:11.5px;font-weight:500;
+    padding:4px 11px;border-radius:6px;cursor:pointer;
+    transition:background .12s,color .12s;white-space:nowrap;
+  }
+  .segmented button:hover{background:#1c2331;color:var(--text)}
+  .segmented button.active{background:var(--accent);color:#04101f;font-weight:650}
+  .segmented button:disabled{color:var(--muted-2);cursor:not-allowed;background:transparent}
+  .segmented button:disabled:hover{background:transparent}
+  .hint{
+    position:absolute;left:15px;bottom:9px;
+    font-size:10.5px;color:#414b5e;
+    pointer-events:none;user-select:none;letter-spacing:.2px;
+  }
+  .tooltip{
+    position:absolute;z-index:6;pointer-events:none;
+    background:rgba(13,17,25,.95);
+    border:1px solid var(--border-2);
+    border-radius:9px;
+    padding:9px 11px;
+    font-size:11.5px;
+    min-width:160px;
+    max-width:400px;
+    box-shadow:0 14px 40px rgba(0,0,0,.55);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    display:none;
+    font-variant-numeric:tabular-nums;
+  }
+  .tt-time{
+    color:var(--muted);font-size:10px;letter-spacing:.7px;text-transform:uppercase;
+    margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid #1e2534;
+    font-weight:600;
+  }
+  .tt-row{display:flex;align-items:center;gap:7px;line-height:1.65}
+  .tt-sw{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+  .tt-name{
+    flex:1;min-width:0;display:flex;align-items:center;gap:6px;color:#b6c0d4;
+  }
+  .tt-ds{
+    flex:0 0 auto;max-width:130px;
+    background:#1b2231;color:#95a0b8;
+    border-radius:4px;padding:0 5px;
+    font-size:9.5px;font-weight:600;letter-spacing:.2px;line-height:1.6;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .tt-tr{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tt-val{color:#fff;font-weight:650;letter-spacing:.2px;flex:0 0 auto}
+  .tt-sub{color:var(--muted);font-size:10px;font-weight:500;margin-left:5px}
+  .tt-more{color:var(--muted-2);font-size:10.5px;margin-top:4px}
+  .drop-overlay{
+    position:absolute;inset:14px;
+    display:none;place-items:center;
+    border:2px dashed var(--accent);
+    border-radius:14px;
+    background:rgba(11,14,20,.84);
+    backdrop-filter:blur(5px);
+    -webkit-backdrop-filter:blur(5px);
+    font-size:15px;font-weight:650;color:var(--accent);
+    letter-spacing:.3px;
+    z-index:20;
+    pointer-events:none;
+  }
+  body.dragging .drop-overlay{display:grid}
+  .empty{
+    position:absolute;inset:0;display:grid;place-content:center;
+    text-align:center;color:var(--muted);gap:7px;pointer-events:none;user-select:none;
+  }
+  .empty p{margin:0;font-size:14px}
+  .empty .muted-line{font-size:12px;color:var(--muted-2)}
+  .empty code{background:#1a2130;padding:2px 7px;border-radius:5px;font-size:12px;color:#9fb4d6}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+    background:#1c2331;border:1px solid var(--border-2);
+    color:var(--text);padding:9px 16px;border-radius:9px;
+    font-size:12.5px;z-index:100;
+    box-shadow:0 12px 34px rgba(0,0,0,.5);
+    animation:toastIn .22s ease-out;
+  }
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+  @media (max-width:720px){
+    #sidebar{width:238px;flex-basis:238px}
+    .hint{display:none!important}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 18l5-12 4 8 4-6 5 10"/>
+    </svg>
+    <div class="brand-txt">
+      <h1>Spice Plot</h1>
+      <span class="sub">LT Spice data viewer</span>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="clearBtn">Clear all</button>
+  <button class="btn primary" id="openBtn">Open files</button>
+  <input type="file" id="fileInput" multiple accept=".txt,.csv,.tsv,.log,text/plain" hidden>
+</header>
+<main>
+  <aside id="sidebar">
+    <div class="side-head">
+      <span>Datasets</span>
+      <span class="badge" id="countBadge">0</span>
+    </div>
+    <div id="fileList"></div>
+  </aside>
+  <section id="chartWrap">
+    <canvas id="chart"></canvas>
+    <div class="chart-toolbar">
+      <div class="segmented" id="domainSeg">
+        <button type="button" data-domain="auto" class="active">Auto</button>
+        <button type="button" data-domain="freq">Freq</button>
+        <button type="button" data-domain="time">Time</button>
+      </div>
+      <div class="segmented" id="modeSeg">
+        <button type="button" data-mode="db" class="active">dB</button>
+        <button type="button" data-mode="lin">Mag</button>
+        <button type="button" data-mode="ph">Phase</button>
+      </div>
+      <button class="btn small" id="fitBtn">Fit</button>
+    </div>
+    <div class="hint" id="hint">Scroll to zoom &middot; Shift+scroll for Y &middot; Drag to pan &middot; Double-click to fit</div>
+    <div class="tooltip" id="tooltip"></div>
+    <div class="empty" id="empty">
+      <p>Drop LTspice AC, FFT or transient exports here</p>
+      <p class="muted-line">Bode (20 Hz &ndash; 20 kHz) &middot; polar, dB or rectangular &middot; time-domain .tran</p>
+    </div>
+    <div class="drop-overlay">Drop files to plot</div>
+  </section>
+</main>
+<script>
+(() => {
+"use strict";
+/* ============================================================
+   Constants
+   ============================================================ */
+const F_MIN = 20;
+const F_MAX = 20000;
+const LOG_MIN = Math.log10(F_MIN);
+const LOG_MAX = Math.log10(F_MAX);
+const MIN_SPAN = 0.0006;              // ~0.14 % of a decade (freq)
+const MIN_TSPAN = 1e-12;              // minimum zoom span (time, seconds)
+const PALETTE = [
+  '#4ea1ff', '#ff6b6b', '#4ade80', '#fbbf24', '#c084fc',
+  '#22d3ee', '#fb923c', '#f472b6', '#a3e635', '#818cf8',
+  '#2dd4bf', '#f87171', '#e879f9', '#facc15', '#38bdf8'
+];
+let colorIdx = 0;
+const nextColor = () => PALETTE[colorIdx++ % PALETTE.length];
+let uid = 0;
+const state = { files: [] };
+let mode = 'db';                       // 'db' | 'lin' | 'ph'
+let domain = 'auto';                   // 'auto' | 'freq' | 'time'
+const MODE_LABEL = {
+  db:  'Magnitude (dB)',
+  lin: 'Magnitude',
+  ph:  'Phase (\u00b0)'
+};
+const EYE = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+const X_ICON = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+const PENCIL = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+const fmtCount = n => n.toLocaleString('en-US');
+function datasetName(f) {
+  return (f.customName && f.customName.trim()) ? f.customName.trim() : f.name;
+}
+/* ============================================================
+   Complex cell parsing (AC / FFT)
+   ------------------------------------------------------------
+   Supported LTspice AC/FFT value formats (auto-detected):
+     1.56e+00,-2.17e-01              rectangular  (re, im)
+     (-2.82e+01dB, 0.00e+00°)        polar, magnitude in dB
+     (3.42e-02, 1.79e+02°)           polar, linear magnitude
+     (-2.82e+01dB)                   magnitude only
+     4.50e+01°                       phase only
+     1.5e+00+2.3e-01j                engineering complex
+   ============================================================ */
+const NUM_SRC = '([+-]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?)';
+const RE_DB   = new RegExp('^' + NUM_SRC + '\\s*dB$', 'i');
+const RE_DEG  = new RegExp('^' + NUM_SRC + '\\s*(?:\\u00b0|\\u02da|deg(?:rees?)?)$', 'i');
+const RE_PLAIN= new RegExp('^' + NUM_SRC + '$');
+const RE_J    = new RegExp('^' + NUM_SRC + '\\s*([+-])\\s*' +
+                           '((?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?)\\s*[ji]$', 'i');
+/* Parse one half of a complex cell. */
+function parseComponent(s) {
+  const t = String(s).trim();
+  if (!t) return null;
+  let m = t.match(RE_DB);
+  if (m) {
+    const v = Number(m[1]);
+    return Number.isFinite(v) ? { kind: 'magdb', val: v } : null;
+  }
+  m = t.match(RE_DEG);
+  if (m) {
+    const v = Number(m[1]);
+    return Number.isFinite(v) ? { kind: 'phase', val: v } : null;
+  }
+  m = t.match(RE_PLAIN);
+  if (m) {
+    const v = Number(m[1]);
+    return Number.isFinite(v) ? { kind: 'num', val: v } : null;
+  }
+  return null;
+}
+const dbToLinear = db => Math.pow(10, db / 20);
+const degToRad   = d  => d * Math.PI / 180;
+/* Parse a complete complex cell into { re, im }. */
+function parseComplexCell(s) {
+  let t = String(s).trim();
+  if (!t) return null;
+  if (t[0] === '(' && t[t.length - 1] === ')') t = t.slice(1, -1).trim();
+  if (!t) return null;
+  const jm = t.match(RE_J);
+  if (jm) {
+    const re = Number(jm[1]);
+    const im = Number(jm[3]) * (jm[2] === '-' ? -1 : 1);
+    if (Number.isFinite(re) && Number.isFinite(im)) return { re, im };
+  }
+  const parts = t.split(',').map(p => p.trim());
+  if (parts.length === 1) {
+    const a = parseComponent(parts[0]);
+    if (!a) return null;
+    if (a.kind === 'phase') {
+      const r = degToRad(a.val);
+      return { re: Math.cos(r), im: Math.sin(r) };
+    }
+    if (a.kind === 'magdb') {
+      return { re: dbToLinear(a.val), im: 0 };
+    }
+    return { re: a.val, im: 0 };
+  }
+  if (parts.length !== 2) return null;
+  const a = parseComponent(parts[0]);
+  const b = parseComponent(parts[1]);
+  if (!a || !b) return null;
+  const aPhase = a.kind === 'phase';
+  const bPhase = b.kind === 'phase';
+  if (aPhase !== bPhase) {
+    const phaseDeg = aPhase ? a.val : b.val;
+    const magPart  = aPhase ? b : a;
+    const mag = magPart.kind === 'magdb' ? dbToLinear(magPart.val) : magPart.val;
+    const r = degToRad(phaseDeg);
+    return { re: mag * Math.cos(r), im: mag * Math.sin(r) };
+  }
+  if (a.kind === 'magdb' || b.kind === 'magdb') {
+    const magPart = a.kind === 'magdb' ? a : b;
+    const angPart = a.kind === 'magdb' ? b : a;
+    const mag = dbToLinear(magPart.val);
+    const r = degToRad(angPart.val);
+    return { re: mag * Math.cos(r), im: mag * Math.sin(r) };
+  }
+  return { re: a.val, im: b.val };
+}
+function rangeOf(arr) {
+  let mn = Infinity, mx = -Infinity;
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i];
+    if (!Number.isFinite(v)) continue;
+    if (v < mn) mn = v;
+    if (v > mx) mx = v;
+  }
+  if (!Number.isFinite(mn)) return [0, 1];
+  return [mn, mx];
+}
+/* ============================================================
+   AC / FFT file parser
+   ============================================================ */
+function parseACData(text) {
+  const lines = text.split(/\r?\n/);
+  const blocks = [];
+  let cur = null;
+  let curStep = null;
+  let pendingLabel = null;
+  function startStep(label) {
+    if (!cur) return;
+    curStep = { label, rows: cur.names.map(() => []) };
+    cur.steps.push(curStep);
+  }
+  for (const raw of lines) {
+    if (!raw || !raw.trim()) continue;
+    const stepM = raw.match(/^\s*Step\s+Information\s*:\s*(.+?)\s*$/i);
+    if (stepM) {
+      const label = stepM[1]
+        .replace(/\s*\(\s*Run\s*:\s*\d+\s*\/\s*\d+\s*\)\s*$/i, '')
+        .trim();
+      if (cur) startStep(label || null);
+      else     pendingLabel = label || null;
+      continue;
+    }
+    let parts = raw.includes('\t') ? raw.split('\t') : raw.trim().split(/\s+/);
+    while (parts.length && parts[parts.length - 1].trim() === '') parts.pop();
+    if (!parts.length) continue;
+    const first = parts[0].trim();
+    const firstIsNum = first !== '' && Number.isFinite(Number(first));
+    if (!firstIsNum) {
+      if (parts.length < 2) continue;
+      cur = { names: parts.map(p => p.trim()), steps: [] };
+      blocks.push(cur);
+      curStep = null;
+      continue;
+    }
+    if (!cur) {
+      cur = {
+        names: parts.map((_, i) => (i === 0 ? 'Freq' : 'trace' + i)),
+        steps: []
+      };
+      blocks.push(cur);
+      curStep = null;
+    }
+    if (!curStep) {
+      startStep(pendingLabel);
+      pendingLabel = null;
+    }
+    for (let i = 0; i < parts.length && i < curStep.rows.length; i++) {
+      curStep.rows[i].push(parts[i].trim());
+    }
+  }
+  const traces = [];
+  let sawAnyData = false;
+  const multiBlock = blocks.length > 1;
+  const stepCount  = blocks.reduce((a, b) => a + b.steps.length, 0);
+  const multiStep  = stepCount > 1;
+  blocks.forEach((b, bi) => {
+    let fi = b.names.findIndex(n => /^(freq|frequency)/i.test(n));
+    if (fi < 0) fi = 0;
+    b.steps.forEach((step, si) => {
+      const fcol = step.rows[fi];
+      if (!fcol || !fcol.length) return;
+      for (let c = 0; c < step.rows.length; c++) {
+        if (c === fi) continue;
+        const vcol = step.rows[c];
+        if (!vcol || !vcol.length) continue;
+        const n = Math.min(fcol.length, vcol.length);
+        const fTmp = [], reTmp = [], imTmp = [];
+        for (let i = 0; i < n; i++) {
+          const f = Number(fcol[i]);
+          if (!Number.isFinite(f)) continue;
+          sawAnyData = true;
+          if (f < F_MIN - 1e-9 || f > F_MAX + 1e-9) continue;
+          const cv = parseComplexCell(vcol[i]);
+          if (!cv) continue;
+          fTmp.push(f);
+          reTmp.push(cv.re);
+          imTmp.push(cv.im);
+        }
+        if (fTmp.length < 1) continue;
+        const order = fTmp.map((_, i) => i);
+        order.sort((x, y) => fTmp[x] - fTmp[y]);
+        const m = order.length;
+        const x   = new Float64Array(m);
+        const db  = new Float64Array(m);
+        const lin = new Float64Array(m);
+        const ph  = new Float64Array(m);
+        for (let k = 0; k < m; k++) {
+          const i = order[k];
+          const re = reTmp[i], im = imTmp[i];
+          const mag = Math.hypot(re, im);
+          x[k]   = fTmp[i];
+          lin[k] = mag;
+          db[k]  = mag > 0 ? Math.max(-240, 20 * Math.log10(mag)) : -240;
+          ph[k]  = Math.atan2(im, re) * 180 / Math.PI;
+        }
+        let label = b.names[c] || ('trace ' + (c + 1));
+        const tags = [];
+        if (step.label) tags.push(step.label);
+        else {
+          if (multiStep && b.steps.length > 1) tags.push('step ' + (si + 1));
+          if (multiBlock)                      tags.push('block ' + (bi + 1));
+        }
+        if (tags.length) label += '  \u00b7 ' + tags.join('  \u00b7 ');
+        traces.push({
+          label, x, db, lin, ph,
+          rng: { db: rangeOf(db), lin: rangeOf(lin), ph: rangeOf(ph) }
+        });
+      }
+    });
+  });
+  return { traces, sawAnyData };
+}
+/* ============================================================
+   Transient file parser
+   ------------------------------------------------------------
+   First column is time; every other column is a real-valued
+   waveform.  Stepped runs are supported the same way as AC.
+   ============================================================ */
+function parseTransientData(text) {
+  const lines = text.split(/\r?\n/);
+  const blocks = [];
+  let cur = null;
+  let curStep = null;
+  let pendingLabel = null;
+  function startStep(label) {
+    if (!cur) return;
+    curStep = { label, rows: cur.names.map(() => []) };
+    cur.steps.push(curStep);
+  }
+  for (const raw of lines) {
+    if (!raw || !raw.trim()) continue;
+    const stepM = raw.match(/^\s*Step\s+Information\s*:\s*(.+?)\s*$/i);
+    if (stepM) {
+      const label = stepM[1]
+        .replace(/\s*\(\s*Run\s*:\s*\d+\s*\/\s*\d+\s*\)\s*$/i, '')
+        .trim();
+      if (cur) startStep(label || null);
+      else     pendingLabel = label || null;
+      continue;
+    }
+    let parts = raw.includes('\t') ? raw.split('\t') : raw.trim().split(/\s+/);
+    while (parts.length && parts[parts.length - 1].trim() === '') parts.pop();
+    if (!parts.length) continue;
+    const first = parts[0].trim();
+    const firstIsNum = first !== '' && Number.isFinite(Number(first));
+    if (!firstIsNum) {
+      if (parts.length < 2) continue;
+      cur = { names: parts.map(p => p.trim()), steps: [] };
+      blocks.push(cur);
+      curStep = null;
+      continue;
+    }
+    if (!cur) {
+      cur = {
+        names: parts.map((_, i) => (i === 0 ? 'time' : 'trace' + i)),
+        steps: []
+      };
+      blocks.push(cur);
+      curStep = null;
+    }
+    if (!curStep) {
+      startStep(pendingLabel);
+      pendingLabel = null;
+    }
+    for (let i = 0; i < parts.length && i < curStep.rows.length; i++) {
+      curStep.rows[i].push(parts[i].trim());
+    }
+  }
+  const traces = [];
+  let sawAnyData = false;
+  const multiBlock = blocks.length > 1;
+  const stepCount  = blocks.reduce((a, b) => a + b.steps.length, 0);
+  const multiStep  = stepCount > 1;
+  blocks.forEach((b, bi) => {
+    let ti = b.names.findIndex(n => /^(time|t)$/i.test(n));
+    if (ti < 0) ti = 0;
+    b.steps.forEach((step, si) => {
+      const tcol = step.rows[ti];
+      if (!tcol || !tcol.length) return;
+      for (let c = 0; c < step.rows.length; c++) {
+        if (c === ti) continue;
+        const vcol = step.rows[c];
+        if (!vcol || !vcol.length) continue;
+        const n = Math.min(tcol.length, vcol.length);
+        const xTmp = [], yTmp = [];
+        for (let i = 0; i < n; i++) {
+          const t = Number(tcol[i]);
+          const v = Number(vcol[i]);
+          if (!Number.isFinite(t) || !Number.isFinite(v)) continue;
+          sawAnyData = true;
+          xTmp.push(t);
+          yTmp.push(v);
+        }
+        if (xTmp.length < 1) continue;
+        const order = xTmp.map((_, i) => i);
+        order.sort((a, b) => xTmp[a] - xTmp[b]);
+        const m = order.length;
+        const x   = new Float64Array(m);
+        const db  = new Float64Array(m);
+        const lin = new Float64Array(m);
+        const ph  = new Float64Array(m);
+        for (let k = 0; k < m; k++) {
+          const i = order[k];
+          const v = yTmp[i];
+          const av = Math.abs(v);
+          x[k]   = xTmp[i];
+          lin[k] = v;
+          db[k]  = av > 0 ? Math.max(-240, 20 * Math.log10(av)) : -240;
+          ph[k]  = 0;
+        }
+        let label = b.names[c] || ('trace ' + (c + 1));
+        const tags = [];
+        if (step.label) tags.push(step.label);
+        else {
+          if (multiStep && b.steps.length > 1) tags.push('step ' + (si + 1));
+          if (multiBlock)                      tags.push('block ' + (bi + 1));
+        }
+        if (tags.length) label += '  \u00b7 ' + tags.join('  \u00b7 ');
+        traces.push({
+          label, x, db, lin, ph,
+          rng: { db: rangeOf(db), lin: rangeOf(lin), ph: [0, 0] }
+        });
+      }
+    });
+  });
+  return { traces, sawAnyData };
+}
+/* ============================================================
+   Data type detection
+   ============================================================ */
+function detectDataType(text) {
+  const lines = text.split(/\r?\n/);
+  for (const raw of lines) {
+    if (!raw || !raw.trim()) continue;
+    if (/^\s*Step\s+Information\s*:/i.test(raw)) continue;
+    const parts = raw.includes('\t') ? raw.split('\t') : raw.trim().split(/\s+/);
+    if (!parts.length) continue;
+    const first = parts[0].trim();
+    if (first === '' || Number.isFinite(Number(first))) {
+      return 'ac'; // no header column -> assume frequency domain
+    }
+    if (/^(time|t)$/i.test(first)) return 'tran';
+    return 'ac';
+  }
+  return 'ac';
+}
+/* ============================================================
+   Chart state
+   ============================================================ */
+const canvas    = document.getElementById('chart');
+const ctx       = canvas.getContext('2d');
+const chartWrap = document.getElementById('chartWrap');
+const tooltipEl = document.getElementById('tooltip');
+const emptyEl   = document.getElementById('empty');
+const hintEl    = document.getElementById('hint');
+const baseCanvas = document.createElement('canvas');
+const bctx = baseCanvas.getContext('2d');
+let W = 1, H = 1, dpr = 1;
+const PAD = { top: 28, right: 22, bottom: 44, left: 66 };
+let view = null;          // { x0, x1, y0, y1, logX }
+let needsFit = true;
+let needsYFit = false;
+let baseDirty = true;
+let hover = null;
+let drag = null;
+let lastDom = null;
+function plotRect() {
+  return {
+    x: PAD.left,
+    y: PAD.top,
+    w: Math.max(1, W - PAD.left - PAD.right),
+    h: Math.max(1, H - PAD.top - PAD.bottom)
+  };
+}
+function activeDomain() {
+  if (domain === 'freq' || domain === 'time') return domain;
+  const hasFreq = state.files.some(f => f.type === 'ac'   && f.traces.some(t => t.visible));
+  const hasTime = state.files.some(f => f.type === 'tran' && f.traces.some(t => t.visible));
+  if (hasFreq) return 'freq';
+  if (hasTime) return 'time';
+  return 'freq';
+}
+function visibleTraces() {
+  const dom = activeDomain();
+  const out = [];
+  for (const f of state.files)
+    for (const t of f.traces)
+      if (t.visible && t.domain === dom) out.push(t);
+  return out;
+}
+function overallBounds(traces) {
+  let y0 = Infinity, y1 = -Infinity;
+  for (const t of traces) {
+    if (!Number.isFinite(t.yMin)) continue;
+    if (t.yMin < y0) y0 = t.yMin;
+    if (t.yMax > y1) y1 = t.yMax;
+  }
+  if (!Number.isFinite(y0)) return null;
+  return { y0, y1 };
+}
+function xBounds(traces, dom) {
+  if (dom === 'freq') return [LOG_MIN, LOG_MAX];
+  let mn = Infinity, mx = -Infinity;
+  for (const t of traces) {
+    if (!t.x.length) continue;
+    if (t.x[0] < mn) mn = t.x[0];
+    if (t.x[t.x.length - 1] > mx) mx = t.x[t.x.length - 1];
+  }
+  if (!Number.isFinite(mn)) return [0, 1e-3];
+  if (!(mx > mn)) { mn -= 1e-9; mx += 1e-9; }
+  const p = (mx - mn) * 0.05;
+  return [mn - p, mx + p];
+}
+function padY(v) {
+  let { x0, x1, y0, y1 } = v;
+  if (!(y1 > y0)) { y0 -= 1; y1 += 1; }
+  const p = (y1 - y0) * 0.08;
+  return { x0, x1, y0: y0 - p, y1: y1 + p, logX: v.logX };
+}
+function applyMode(t) {
+  if (t.domain === 'time') {
+    t.y = t.lin;
+    t.yMin = t.rng.lin[0];
+    t.yMax = t.rng.lin[1];
+    return;
+  }
+  t.y = t[mode];
+  const r = t.rng[mode];
+  t.yMin = r[0];
+  t.yMax = r[1];
+}
+/* ---------- number formatting ---------- */
+function niceNum(range, round) {
+  if (!Number.isFinite(range) || range <= 0) return 1;
+  const exp = Math.floor(Math.log10(range));
+  const f = range / Math.pow(10, exp);
+  let nf;
+  if (round) nf = f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10;
+  else       nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+  return nf * Math.pow(10, exp);
+}
+function niceTicks(min, max, count) {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return [min];
+  const range = niceNum(max - min, false);
+  const step  = niceNum(range / Math.max(1, count - 1), true);
+  if (!Number.isFinite(step) || step <= 0) return [min];
+  const start = Math.ceil(min / step) * step;
+  const ticks = [];
+  for (let v = start, i = 0; v <= max + step * 1e-6 && i < 200; v += step, i++) {
+    ticks.push(Math.abs(v) < step * 1e-9 ? 0 : v);
+  }
+  return ticks;
+}
+function fmtAxis(v) {
+  if (!Number.isFinite(v)) return '';
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-4) return v.toExponential(1).replace('e+', 'e');
+  const exp = Math.floor(Math.log10(a));
+  const d = clamp(2 - exp, 0, 8);
+  let s = v.toFixed(d);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  return s === '-0' ? '0' : s;
+}
+function fmtHzTick(v) {
+  if (v >= 1000) {
+    const k = v / 1000;
+    return (Number.isInteger(k) ? k : parseFloat(k.toFixed(1))) + 'k';
+  }
+  return String(Math.round(v));
+}
+function fmtTimeTick(t) {
+  if (t === 0) return '0';
+  const a = Math.abs(t);
+  if (a >= 1)     return String(parseFloat(t.toFixed(3))) + ' s';
+  if (a >= 1e-3)  return String(parseFloat((t * 1e3).toFixed(3))) + ' ms';
+  if (a >= 1e-6)  return String(parseFloat((t * 1e6).toFixed(3))) + ' \u00b5s';
+  if (a >= 1e-9)  return String(parseFloat((t * 1e9).toFixed(3))) + ' ns';
+  return t.toExponential(1).replace('e+', 'e') + ' s';
+}
+function fmtFreqShort(f) {
+  if (f >= 1000) return String(parseFloat((f / 1000).toFixed(2))) + ' kHz';
+  return String(parseFloat(f.toFixed(1))) + ' Hz';
+}
+function fmtTime(t) {
+  const a = Math.abs(t);
+  if (a >= 1)     return String(parseFloat(t.toFixed(6))) + ' s';
+  if (a >= 1e-3)  return String(parseFloat((t * 1e3).toFixed(6))) + ' ms';
+  if (a >= 1e-6)  return String(parseFloat((t * 1e6).toFixed(6))) + ' \u00b5s';
+  if (a >= 1e-9)  return String(parseFloat((t * 1e9).toFixed(6))) + ' ns';
+  return t.toExponential(4).replace('e+', 'e') + ' s';
+}
+function fmtModeVal(v) {
+  if (!Number.isFinite(v)) return '\u2014';
+  if (mode === 'db') return v.toFixed(2) + ' dB';
+  if (mode === 'ph') return v.toFixed(1) + '\u00b0';
+  const a = Math.abs(v);
+  if (a !== 0 && (a >= 1e5 || a < 1e-3)) return v.toExponential(3).replace('e+', 'e');
+  return String(parseFloat(v.toPrecision(4)));
+}
+function fmtVolt(v) {
+  if (!Number.isFinite(v)) return '\u2014';
+  const a = Math.abs(v);
+  if (a === 0) return '0 V';
+  if (a >= 1)     return String(parseFloat(v.toPrecision(5))) + ' V';
+  if (a >= 1e-3)  return String(parseFloat((v * 1e3).toPrecision(5))) + ' mV';
+  if (a >= 1e-6)  return String(parseFloat((v * 1e6).toPrecision(5))) + ' \u00b5V';
+  if (a >= 1e-9)  return String(parseFloat((v * 1e9).toPrecision(5))) + ' nV';
+  return v.toExponential(3).replace('e+', 'e') + ' V';
+}
+function fmtVal(v, dom) {
+  return dom === 'freq' ? fmtModeVal(v) : fmtVolt(v);
+}
+/* ---------- binary search / sampling ---------- */
+function lowerBound(arr, v) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; }
+  return lo;
+}
+function upperBound(arr, v) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= v) lo = m + 1; else hi = m; }
+  return lo;
+}
+function sampleArr(t, f, arr) {
+  const xs = t.x, n = xs.length;
+  if (!n) return null;
+  if (f < xs[0] || f > xs[n - 1]) return null;
+  const i = lowerBound(xs, f);
+  let y;
+  if (i === 0) y = arr[0];
+  else if (i >= n) y = arr[n - 1];
+  else {
+    const xa = xs[i - 1], xb = xs[i], ya = arr[i - 1], yb = arr[i];
+    if (xb === xa) y = yb;
+    else {
+      const r = (f - xa) / (xb - xa);
+      y = ya + (yb - ya) * r;
+    }
+  }
+  return Number.isFinite(y) ? y : null;
+}
+/* ---------- log axis ticks ---------- */
+function logTicks(lx0, lx1) {
+  const major = [], minor = [];
+  const d0 = Math.floor(lx0) - 1;
+  const d1 = Math.ceil(lx1) + 1;
+  for (let d = d0; d <= d1; d++) {
+    const base = Math.pow(10, d);
+    for (let m = 1; m <= 9; m++) {
+      const v = base * m;
+      const lv = Math.log10(v);
+      if (lv < lx0 - 1e-9 || lv > lx1 + 1e-9) continue;
+      if (m === 1 || m === 2 || m === 5) major.push(v);
+      else minor.push(v);
+    }
+  }
+  return { major, minor };
+}
+/* ============================================================
+   Series path (min/max decimation per pixel column)
+   ============================================================ */
+function tracePath(c, t, sx, sy, pr, f0, f1) {
+  const xs = t.x, ys = t.y, n = xs.length;
+  if (!n) return;
+  let i0 = lowerBound(xs, f0);
+  let i1 = upperBound(xs, f1);
+  if (i0 > 0) i0--;
+  if (i1 < n) i1++;
+  if (i1 <= i0) return;
+  const count = i1 - i0;
+  const pxWidth = Math.max(1, Math.floor(pr.w));
+  if (count <= pxWidth * 2) {
+    let started = false;
+    for (let i = i0; i < i1; i++) {
+      const xv = xs[i], yv = ys[i];
+      if (!Number.isFinite(xv) || !Number.isFinite(yv)) { started = false; continue; }
+      const px = sx(xv), py = sy(yv);
+      if (!started) { c.moveTo(px, py); started = true; }
+      else c.lineTo(px, py);
+    }
+    return;
+  }
+  let curBucket = -1, minY = 0, maxY = 0, started = false;
+  const flush = () => {
+    if (curBucket < 0) return;
+    const bx = pr.x + curBucket + 0.5;
+    const ya = sy(minY), yb = sy(maxY);
+    if (!started) { c.moveTo(bx, ya); started = true; }
+    else c.lineTo(bx, ya);
+    c.lineTo(bx, yb);
+  };
+  for (let i = i0; i < i1; i++) {
+    const xv = xs[i], yv = ys[i];
+    if (!Number.isFinite(xv) || !Number.isFinite(yv)) continue;
+    const bucket = clamp(Math.floor(sx(xv) - pr.x), 0, pxWidth - 1);
+    if (bucket !== curBucket) {
+      flush();
+      curBucket = bucket; minY = yv; maxY = yv;
+    } else {
+      if (yv < minY) minY = yv;
+      if (yv > maxY) maxY = yv;
+    }
+  }
+  flush();
+}
+/* ============================================================
+   Base render
+   ============================================================ */
+function renderBase() {
+  baseCanvas.width  = Math.round(W * dpr);
+  baseCanvas.height = Math.round(H * dpr);
+  const c = bctx;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, W, H);
+  const pr = plotRect();
+  if (pr.w <= 2 || pr.h <= 2) return;
+  const traces = visibleTraces();
+  const b = overallBounds(traces);
+  if (!b) { view = null; return; }
+  const dom = activeDomain();
+  const wantLog = dom === 'freq';
+  if (needsFit || !view || view.logX !== wantLog) {
+    const xb = xBounds(traces, dom);
+    view = padY({ x0: xb[0], x1: xb[1], y0: b.y0, y1: b.y1, logX: wantLog });
+    needsFit = false;
+    needsYFit = false;
+  } else if (needsYFit) {
+    view = padY({ x0: view.x0, x1: view.x1, y0: b.y0, y1: b.y1, logX: view.logX });
+    needsYFit = false;
+  }
+  const { x0, x1, y0, y1, logX } = view;
+  const sx = logX
+    ? v => pr.x + (Math.log10(v) - x0) / (x1 - x0) * pr.w
+    : v => pr.x + (v - x0) / (x1 - x0) * pr.w;
+  const sy = v => pr.y + pr.h - (v - y0) / (y1 - y0) * pr.h;
+  const yTicks = niceTicks(y0, y1, clamp(Math.floor(pr.h / 62), 3, 12));
+  let major, minor;
+  if (logX) {
+    const t = logTicks(x0, x1);
+    major = t.major; minor = t.minor;
+  } else {
+    major = niceTicks(x0, x1, clamp(Math.floor(pr.w / 86), 3, 14));
+    minor = [];
+  }
+  /* ---- minor grid ---- */
+  c.strokeStyle = '#151b27';
+  c.lineWidth = 1;
+  c.beginPath();
+  for (const f of minor) {
+    const px = Math.round(sx(f)) + 0.5;
+    c.moveTo(px, pr.y); c.lineTo(px, pr.y + pr.h);
+  }
+  c.stroke();
+  /* ---- major grid ---- */
+  c.strokeStyle = '#1a2130';
+  c.beginPath();
+  for (const f of major) {
+    const px = Math.round(sx(f)) + 0.5;
+    c.moveTo(px, pr.y); c.lineTo(px, pr.y + pr.h);
+  }
+  for (const v of yTicks) {
+    const py = Math.round(sy(v)) + 0.5;
+    c.moveTo(pr.x, py); c.lineTo(pr.x + pr.w, py);
+  }
+  c.stroke();
+  /* ---- 0 reference ---- */
+  if (y0 < 0 && y1 > 0) {
+    c.strokeStyle = '#2c3648';
+    c.beginPath();
+    const py = Math.round(sy(0)) + 0.5;
+    c.moveTo(pr.x, py); c.lineTo(pr.x + pr.w, py);
+    c.stroke();
+  }
+  /* ---- traces ---- */
+  c.save();
+  c.beginPath();
+  c.rect(pr.x, pr.y, pr.w, pr.h);
+  c.clip();
+  const f0 = logX ? Math.pow(10, x0) : x0;
+  const f1 = logX ? Math.pow(10, x1) : x1;
+  c.lineWidth = 1.7;
+  c.lineJoin = 'round';
+  c.lineCap = 'round';
+  for (const t of traces) {
+    c.strokeStyle = t.color;
+    c.beginPath();
+    tracePath(c, t, sx, sy, pr, f0, f1);
+    c.stroke();
+  }
+  c.restore();
+  /* ---- x labels ---- */
+  c.font = '11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  c.fillStyle = '#78829a';
+  c.textAlign = 'center';
+  c.textBaseline = 'top';
+  let lastRight = -1e9;
+  for (const f of major) {
+    const px = sx(f);
+    const label = logX ? fmtHzTick(f) : fmtTimeTick(f);
+    const w = c.measureText(label).width;
+    if (px - w / 2 < lastRight + 12) continue;
+    c.fillText(label, px, pr.y + pr.h + 8);
+    lastRight = px + w / 2;
+  }
+  c.fillStyle = '#5b647a';
+  c.font = '10.5px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  c.fillText(logX ? 'Frequency (Hz)' : 'Time (s)', pr.x + pr.w / 2, pr.y + pr.h + 25);
+  /* ---- y labels ---- */
+  c.fillStyle = '#78829a';
+  c.font = '11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  c.textAlign = 'right';
+  c.textBaseline = 'middle';
+  for (const v of yTicks) {
+    c.fillText(fmtAxis(v), pr.x - 9, sy(v));
+  }
+  /* ---- y axis title (top-left) ---- */
+  c.fillStyle = '#5b647a';
+  c.font = '10.5px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  c.textAlign = 'left';
+  c.textBaseline = 'bottom';
+  c.fillText(dom === 'freq' ? MODE_LABEL[mode] : 'Voltage (V)', pr.x, pr.y - 7);
+  /* ---- frame ---- */
+  c.strokeStyle = '#222a38';
+  c.lineWidth = 1;
+  c.strokeRect(pr.x + 0.5, pr.y + 0.5, pr.w, pr.h);
+}
+/* ============================================================
+   Overlay
+   ============================================================ */
+function drawOverlay() {
+  if (!hover || !view) return;
+  const pr = plotRect();
+  if (hover.px < pr.x || hover.px > pr.x + pr.w) return;
+  if (hover.py < pr.y || hover.py > pr.y + pr.h) return;
+  const { x0, x1, y0, y1, logX } = view;
+  const sy = v => pr.y + pr.h - (v - y0) / (y1 - y0) * pr.h;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pr.x, pr.y, pr.w, pr.h);
+  ctx.clip();
+  const px = Math.round(hover.px) + 0.5;
+  ctx.strokeStyle = 'rgba(150,170,210,0.32)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(px, pr.y);
+  ctx.lineTo(px, pr.y + pr.h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const xv = logX
+    ? Math.pow(10, x0 + (hover.px - pr.x) / pr.w * (x1 - x0))
+    : x0 + (hover.px - pr.x) / pr.w * (x1 - x0);
+  for (const t of visibleTraces()) {
+    const yv = sampleArr(t, xv, t.y);
+    if (yv === null) continue;
+    const py = sy(yv);
+    if (py < pr.y - 4 || py > pr.y + pr.h + 4) continue;
+    ctx.beginPath();
+    ctx.arc(hover.px, py, 3.6, 0, Math.PI * 2);
+    ctx.fillStyle = t.color;
+    ctx.fill();
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = '#0b0e14';
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+/* ============================================================
+   Composite draw
+   ============================================================ */
+function draw() {
+  if (baseDirty) { renderBase(); baseDirty = false; }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(baseCanvas, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawOverlay();
+}
+/* ============================================================
+   Tooltip
+   ============================================================ */
+function hideTooltip() { tooltipEl.style.display = 'none'; }
+function updateTooltip() {
+  if (!hover || !view) { hideTooltip(); return; }
+  const pr = plotRect();
+  if (hover.px < pr.x || hover.px > pr.x + pr.w ||
+      hover.py < pr.y || hover.py > pr.y + pr.h) { hideTooltip(); return; }
+  const { x0, x1, logX } = view;
+  const dom = activeDomain();
+  const xv = logX
+    ? Math.pow(10, x0 + (hover.px - pr.x) / pr.w * (x1 - x0))
+    : x0 + (hover.px - pr.x) / pr.w * (x1 - x0);
+  const rows = [];
+  for (const t of visibleTraces()) {
+    const yv = sampleArr(t, xv, t.y);
+    if (yv === null) continue;
+    const ph = (dom === 'freq' && mode !== 'ph') ? sampleArr(t, xv, t.ph) : null;
+    rows.push({ t, yv, ph });
+  }
+  if (!rows.length) { hideTooltip(); return; }
+  const MAX = 14;
+  let html = `<div class="tt-time">${
+    dom === 'freq' ? 'f = ' + escapeHtml(fmtFreqShort(xv)) : 't = ' + escapeHtml(fmtTime(xv))
+  }</div>`;
+  for (let i = 0; i < Math.min(rows.length, MAX); i++) {
+    const r = rows[i];
+    const ds = (r.t.file && r.t.file.customName && r.t.file.customName.trim())
+      ? r.t.file.customName.trim()
+      : null;
+    const sub = (r.ph !== null)
+      ? `<span class="tt-sub">${escapeHtml(r.ph.toFixed(1))}\u00b0</span>`
+      : '';
+    html += `<div class="tt-row">` +
+              `<span class="tt-sw" style="background:${r.t.color}"></span>` +
+              `<span class="tt-name">` +
+                (ds ? `<span class="tt-ds" title="${escapeHtml(ds)}">${escapeHtml(ds)}</span>` : '') +
+                `<span class="tt-tr">${escapeHtml(r.t.label)}</span>` +
+              `</span>` +
+              `<span class="tt-val">${escapeHtml(fmtVal(r.yv, dom))}</span>` +
+              sub +
+            `</div>`;
+  }
+  if (rows.length > MAX) {
+    html += `<div class="tt-more">+${rows.length - MAX} more trace${rows.length - MAX > 1 ? 's' : ''}</div>`;
+  }
+  tooltipEl.innerHTML = html;
+  tooltipEl.style.display = 'block';
+  const tw = tooltipEl.offsetWidth;
+  const th = tooltipEl.offsetHeight;
+  let lx = hover.px + 18;
+  let ly = hover.py + 16;
+  if (lx + tw > W - 8) lx = hover.px - tw - 18;
+  if (lx < 8) lx = 8;
+  if (ly + th > H - 8) ly = hover.py - th - 16;
+  if (ly < 8) ly = 8;
+  tooltipEl.style.left = lx + 'px';
+  tooltipEl.style.top  = ly + 'px';
+}
+/* ============================================================
+   Mode / domain switching
+   ============================================================ */
+function updateModeButtons() {
+  const dom = activeDomain();
+  const seg = document.getElementById('modeSeg');
+  const btns = seg.querySelectorAll('button[data-mode]');
+  for (const b of btns) {
+    b.classList.toggle('active', b.dataset.mode === mode && dom === 'freq');
+    b.disabled = (dom === 'time');
+  }
+  seg.classList.toggle('dimmed', dom === 'time');
+}
+function updateDomainButtons() {
+  const seg = document.getElementById('domainSeg');
+  const btns = seg.querySelectorAll('button[data-domain]');
+  for (const b of btns) b.classList.toggle('active', b.dataset.domain === domain);
+}
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  for (const f of state.files)
+    for (const t of f.traces)
+      if (t.domain === 'freq') applyMode(t);
+  needsYFit = true;
+  baseDirty = true;
+  updateModeButtons();
+  draw();
+  if (hover) updateTooltip();
+}
+function setDomain(d) {
+  if (d === domain) return;
+  domain = d;
+  needsFit = true;
+  baseDirty = true;
+  updateDomainButtons();
+  updateModeButtons();
+  draw();
+  if (hover) updateTooltip(); else hideTooltip();
+}
+/* ============================================================
+   Resize
+   ============================================================ */
+function resize() {
+  const r = chartWrap.getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1;
+  W = Math.max(1, Math.round(r.width));
+  H = Math.max(1, Math.round(r.height));
+  canvas.width  = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  baseDirty = true;
+  draw();
+  if (hover) updateTooltip();
+}
+/* ============================================================
+   Sidebar
+   ============================================================ */
+function iconBtn(svg, title, onClick) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'icon-btn';
+  b.title = title;
+  b.innerHTML = svg;
+  b.addEventListener('click', (e) => { e.stopPropagation(); onClick(e); });
+  return b;
+}
+function startRename(file, nameEl) {
+  if (nameEl.dataset.editing === '1') return;
+  nameEl.dataset.editing = '1';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'file-name-input';
+  input.value = file.customName || '';
+  input.placeholder = file.name;
+  input.spellcheck = false;
+  input.setAttribute('aria-label', 'Dataset name');
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  function commit(save) {
+    if (done) return;
+    done = true;
+    if (save) {
+      const v = input.value.trim();
+      file.customName = v ? v : null;
+    }
+    renderSidebar();
+    if (hover) updateTooltip();
+    if (save && file.customName) toast('Renamed to \u201c' + file.customName + '\u201d');
+  }
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); commit(false); }
+    else if (e.key === 'Tab') { e.preventDefault(); commit(true); }
+  });
+  input.addEventListener('click', (e) => e.stopPropagation());
+  input.addEventListener('dblclick', (e) => e.stopPropagation());
+  input.addEventListener('blur', () => setTimeout(() => commit(true), 0));
+}
+function renderSidebar() {
+  const list = document.getElementById('fileList');
+  list.textContent = '';
+  const total = state.files.reduce((a, f) => a + f.traces.length, 0);
+  document.getElementById('countBadge').textContent = total;
+  if (!state.files.length) {
+    const p = document.createElement('div');
+    p.className = 'side-empty';
+    p.innerHTML = 'No data loaded.<br>Drop an AC, FFT or transient export to begin.';
+    list.appendChild(p);
+    return;
+  }
+  for (const f of state.files) {
+    const g = document.createElement('div');
+    g.className = 'file-group';
+    const head = document.createElement('div');
+    head.className = 'file-head';
+    const anyVis = f.traces.some(t => t.visible);
+    head.appendChild(iconBtn(anyVis ? EYE : EYE_OFF, 'Toggle all traces in dataset', () => {
+      const target = !f.traces.some(t => t.visible);
+      for (const t of f.traces) t.visible = target;
+      onVisibilityChange();
+    }));
+    const nm = document.createElement('div');
+    nm.className = 'file-name';
+    nm.textContent = datasetName(f);
+    nm.title = f.customName
+      ? `${f.customName}  \u2014  original file: ${f.name}\nDouble-click to rename`
+      : `${f.name}\nDouble-click to rename`;
+    nm.addEventListener('dblclick', (e) => { e.stopPropagation(); startRename(f, nm); });
+    head.appendChild(nm);
+    head.appendChild(iconBtn(PENCIL, 'Rename dataset', () => {
+      const current = g.querySelector('.file-name');
+      if (current) startRename(f, current);
+    }));
+    head.appendChild(iconBtn(X_ICON, 'Remove dataset', () => {
+      state.files = state.files.filter(x => x.id !== f.id);
+      needsFit = true;
+      renderAll();
+    }));
+    g.appendChild(head);
+    for (const t of f.traces) {
+      const row = document.createElement('div');
+      row.className = 'trace' + (t.visible ? '' : ' off');
+      row.title = t.label;
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = t.color;
+      row.appendChild(sw);
+      const label = document.createElement('span');
+      label.className = 'trace-name';
+      label.textContent = t.label;
+      row.appendChild(label);
+      const tag = document.createElement('span');
+      tag.className = 'trace-tag';
+      tag.textContent = t.domain === 'freq' ? 'AC' : 'TRAN';
+      row.appendChild(tag);
+      const pts = document.createElement('span');
+      pts.className = 'pts';
+      pts.textContent = fmtCount(t.x.length);
+      row.appendChild(pts);
+      row.appendChild(iconBtn(t.visible ? EYE : EYE_OFF, 'Show / hide', () => {
+        t.visible = !t.visible;
+        onVisibilityChange();
+      }));
+      row.appendChild(iconBtn(X_ICON, 'Remove trace', () => {
+        f.traces = f.traces.filter(x => x.id !== t.id);
+        if (!f.traces.length) state.files = state.files.filter(x => x.id !== f.id);
+        needsFit = true;
+        renderAll();
+      }));
+      row.addEventListener('click', () => {
+        t.visible = !t.visible;
+        onVisibilityChange();
+      });
+      g.appendChild(row);
+    }
+    list.appendChild(g);
+  }
+}
+function onVisibilityChange() {
+  const nd = activeDomain();
+  if (nd !== lastDom) { needsFit = true; lastDom = nd; }
+  baseDirty = true;
+  renderSidebar();
+  draw();
+  if (hover) updateTooltip(); else hideTooltip();
+}
+function renderAll() {
+  lastDom = activeDomain();
+  renderSidebar();
+  emptyEl.style.display = state.files.length ? 'none' : 'grid';
+  hintEl.style.display  = state.files.length ? 'block' : 'none';
+  updateModeButtons();
+  updateDomainButtons();
+  baseDirty = true;
+  hover = null;
+  hideTooltip();
+  draw();
+}
+/* ============================================================
+   Toasts
+   ============================================================ */
+let toastTimer = null;
+function toast(msg) {
+  const prev = document.querySelector('.toast');
+  if (prev) prev.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 2800);
+}
+/* ============================================================
+   File loading
+   ============================================================ */
+async function addFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  let ok = 0, bad = 0, skipped = 0, acCount = 0, tranCount = 0;
+  for (const f of files) {
+    let text;
+    try { text = await f.text(); } catch (_) { bad++; continue; }
+    text = text.replace(/^\uFEFF/, '');
+    const type = detectDataType(text);
+    let res;
+    try {
+      res = type === 'tran' ? parseTransientData(text) : parseACData(text);
+    } catch (_) { res = { traces: [], sawAnyData: false }; }
+    if (!res.traces.length) {
+      if (res.sawAnyData) skipped++; else bad++;
+      continue;
+    }
+    const fileObj = { id: ++uid, name: f.name, customName: null, type, traces: [] };
+    fileObj.traces = res.traces.map(tr => {
+      const t = {
+        id: ++uid,
+        label: tr.label,
+        domain: type === 'tran' ? 'time' : 'freq',
+        x: tr.x,
+        db: tr.db,
+        lin: tr.lin,
+        ph: tr.ph,
+        rng: tr.rng,
+        visible: true,
+        color: nextColor(),
+        file: fileObj
+      };
+      applyMode(t);
+      return t;
+    });
+    state.files.push(fileObj);
+    if (type === 'tran') tranCount++; else acCount++;
+    ok++;
+  }
+  if (ok) {
+    needsFit = true;
+    renderAll();
+    const bits = [];
+    if (skipped) bits.push(skipped + ' outside range');
+    if (bad) bits.push(bad + ' unreadable');
+    const kinds = [];
+    if (acCount) kinds.push(acCount + ' AC');
+    if (tranCount) kinds.push(tranCount + ' transient');
+    toast('Loaded ' + kinds.join(' + ') + (bits.length ? ' \u00b7 ' + bits.join(', ') + ' skipped' : ''));
+  } else if (skipped) {
+    toast('No data inside 20 Hz \u2013 20 kHz');
+  } else {
+    toast('No usable AC, FFT or transient data found');
+  }
+}
+/* ============================================================
+   Pointer interaction
+   ============================================================ */
+function localPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || !view) return;
+  drag = { cx: e.clientX, cy: e.clientY, view: { ...view } };
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  canvas.style.cursor = 'grabbing';
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (drag && view) {
+    const pr = plotRect();
+    const dlx = (e.clientX - drag.cx) / pr.w * (drag.view.x1 - drag.view.x0);
+    const dy  = (e.clientY - drag.cy) / pr.h * (drag.view.y1 - drag.view.y0);
+    let x0 = drag.view.x0 - dlx;
+    let x1 = drag.view.x1 - dlx;
+    const span = x1 - x0;
+    if (drag.view.logX) {
+      if (x0 < LOG_MIN) { x0 = LOG_MIN; x1 = LOG_MIN + span; }
+      if (x1 > LOG_MAX) { x1 = LOG_MAX; x0 = LOG_MAX - span; }
+    }
+    view = {
+      x0, x1,
+      y0: drag.view.y0 + dy,
+      y1: drag.view.y1 + dy,
+      logX: drag.view.logX
+    };
+    hover = null;
+    hideTooltip();
+    baseDirty = true;
+    draw();
+    return;
+  }
+  const p = localPos(e);
+  hover = { px: p.x, py: p.y };
+  canvas.style.cursor = 'crosshair';
+  draw();
+  updateTooltip();
+});
+function endDrag(e) {
+  if (!drag) return;
+  drag = null;
+  try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+  canvas.style.cursor = 'crosshair';
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('pointerleave', () => {
+  if (drag) return;
+  hover = null;
+  hideTooltip();
+  draw();
+});
+canvas.addEventListener('wheel', (e) => {
+  if (!view) return;
+  const pr = plotRect();
+  const p = localPos(e);
+  if (p.x < pr.x || p.x > pr.x + pr.w || p.y < pr.y || p.y > pr.y + pr.h) return;
+  e.preventDefault();
+  const fx = (p.x - pr.x) / pr.w;
+  const fy = (pr.y + pr.h - p.y) / pr.h;
+  let dy = e.deltaY;
+  if (e.deltaMode === 1) dy *= 16;
+  const k = Math.exp(clamp(dy, -300, 300) * 0.0018);
+  if (e.shiftKey) {
+    const yAt = view.y0 + fy * (view.y1 - view.y0);
+    const y0 = yAt - (yAt - view.y0) * k;
+    const y1 = yAt + (view.y1 - yAt) * k;
+    if (Number.isFinite(y0) && Number.isFinite(y1) && y1 > y0) view = { ...view, y0, y1 };
+  } else {
+    const xAt = view.x0 + fx * (view.x1 - view.x0);
+    let x0 = xAt - (xAt - view.x0) * k;
+    let x1 = xAt + (view.x1 - xAt) * k;
+    if (view.logX) {
+      if (x1 - x0 > (LOG_MAX - LOG_MIN)) { x0 = LOG_MIN; x1 = LOG_MAX; }
+      x0 = clamp(x0, LOG_MIN, LOG_MAX);
+      x1 = clamp(x1, LOG_MIN, LOG_MAX);
+      if (x1 - x0 < MIN_SPAN) {
+        const mid = (x0 + x1) / 2;
+        x0 = clamp(mid - MIN_SPAN / 2, LOG_MIN, LOG_MAX - MIN_SPAN);
+        x1 = x0 + MIN_SPAN;
+      }
+    } else {
+      if (x1 - x0 < MIN_TSPAN) {
+        const mid = (x0 + x1) / 2;
+        x0 = mid - MIN_TSPAN / 2;
+        x1 = mid + MIN_TSPAN / 2;
+      }
+    }
+    if (Number.isFinite(x0) && Number.isFinite(x1) && x1 > x0) {
+      view = { ...view, x0, x1 };
+    }
+  }
+  baseDirty = true;
+  draw();
+  if (hover) updateTooltip();
+}, { passive: false });
+canvas.addEventListener('dblclick', () => {
+  needsFit = true;
+  baseDirty = true;
+  draw();
+  if (hover) updateTooltip();
+});
+/* ============================================================
+   Drag & drop
+   ============================================================ */
+let dragDepth = 0;
+function isFileDrag(e) {
+  const t = e.dataTransfer;
+  if (!t) return false;
+  if (t.types) {
+    for (let i = 0; i < t.types.length; i++) if (t.types[i] === 'Files') return true;
+    return false;
+  }
+  return true;
+}
+window.addEventListener('dragenter', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+  dragDepth++;
+  document.body.classList.add('dragging');
+});
+window.addEventListener('dragover', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+  try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
+});
+window.addEventListener('dragleave', () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) document.body.classList.remove('dragging');
+});
+window.addEventListener('drop', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+  dragDepth = 0;
+  document.body.classList.remove('dragging');
+  if (e.dataTransfer.files && e.dataTransfer.files.length) {
+    addFiles(e.dataTransfer.files);
+  }
+});
+window.addEventListener('dragend', () => {
+  dragDepth = 0;
+  document.body.classList.remove('dragging');
+});
+/* ============================================================
+   Header / toolbar buttons
+   ============================================================ */
+document.getElementById('openBtn').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const input = e.target;
+  if (input.files && input.files.length) addFiles(input.files);
+  input.value = '';
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (!state.files.length) return;
+  state.files = [];
+  colorIdx = 0;
+  view = null;
+  hover = null;
+  needsFit = true;
+  renderAll();
+});
+document.getElementById('fitBtn').addEventListener('click', () => {
+  needsFit = true;
+  baseDirty = true;
+  draw();
+  if (hover) updateTooltip();
+});
+document.getElementById('modeSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-mode]');
+  if (btn && !btn.disabled) setMode(btn.dataset.mode);
+});
+document.getElementById('domainSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-domain]');
+  if (btn) setDomain(btn.dataset.domain);
+});
+/* ============================================================
+   Boot
+   ============================================================ */
+if (window.ResizeObserver) {
+  new ResizeObserver(() => resize()).observe(chartWrap);
+} else {
+  window.addEventListener('resize', resize);
+}
+updateModeButtons();
+updateDomainButtons();
+renderAll();
+resize();
+})();
+</script>
+</body>
+</html>
