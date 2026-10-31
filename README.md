@@ -4,7 +4,8 @@ Simple one page web app for displaying LT Spice data
 - Multiple files can be viewed at once
 - Chart can be toggled between freq or time domain
 - Stepped data is separated into unique series
-- Hide/unhide individual series or whole files
+- Hide/unhide toggles for individual series or whole files
+- Mouse over chart for data readout
 ## Screenshots
 AC Sweep
 ![AC Sweep](spice-plot-ac.png)
